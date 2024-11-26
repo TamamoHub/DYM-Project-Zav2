@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Пелих Ігор</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: Arial, sans-serif;
+        }
+        canvas { 
+            display: block; 
+        }
+        #overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(75, 75, 75, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+            animation: fadeOut 1s ease 5s forwards;
+        }
+        #overlay h2 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        #overlay p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        #overlay .controls {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        #overlay .author {
+            font-style: italic;
+            color: #4CAF50;
+            margin-top: 15px;
+        }
+        @keyframes fadeOut {
+            from {opacity: 1;}
+            to {opacity: 0; visibility: hidden;}
+        }
+        @media (max-width: 768px) {
+            #overlay {
+                width: 80%;
+                font-size: 14px;
+                padding: 15px;
+            }
+            #overlay .controls {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <h2>Керування 3D моделлю</h2>
+        <div class="controls">
+            <p>🖱️ Ліва кнопка миші - обертання моделі</p>
+            <p>👆 Права кнопка миші - переміщення камери</p>
+            <p>⚪ Колесико миші- наближення/віддалення</p>
+        </div>
+        <p class="author">Розробник: Пелих Ігор</p>
+    </div>
+
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            powerPreference: "high-performance"
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x1a1a1a);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 1;
+        controls.maxDistance = 10;
+        controls.maxPolarAngle = Math.PI / 1.5;
+        controls.enableZoom = true;
+        controls.enableRotate = true;
+        controls.enablePan = true;
+        controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN
+        };
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        directionalLight.position.set(0, 1, 1);
+        scene.add(directionalLight);
+
+        camera.position.z = 5;
+
+        try {
+            const loader = new GLTFLoader();
+            loader.load(
+                './3d/Sketchfab_Scene.gltf',
+                function(gltf) {
+                    const model = gltf.scene;
+                    scene.add(model);
+                    
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = box.getSize(new THREE.Vector3());
+                    const center = box.getCenter(new THREE.Vector3());
+
+                    const maxSize = Math.max(size.x, size.y, size.z);
+                    const scale = 4 / maxSize;
+                    model.scale.setScalar(scale);
+
+                    model.position.x = -center.x * scale;
+                    model.position.y = -center.y * scale;
+                    model.position.z = -center.z * scale;
+                    
+                    console.log('Модель завантажено успішно');
+                },
+                function(xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% завантажено');
+                },
+                function(error) {
+                    console.error('Помилка завантаження моделі:', error);
+                    console.error('Деталі помилки:', error.message);
+                }
+            );
+        } catch (error) {
+            console.error('Помилка при створенні GLTFLoader:', error);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        document.body.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            setTimeout(() => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }, 100);
+        }
+    </script>
+</body>
+</html>
