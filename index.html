@@ -58,6 +58,20 @@
                 padding: 8px;
             }
         }
+        .github-link {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .github-link:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +83,11 @@
             <p>⚪ Колесико миші- наближення/віддалення</p>
         </div>
         <p class="author">Розробник: Пелих Ігор</p>
+        <a href="https://github.com/TamamoHub/DYM-Project-Zav2" 
+           target="_blank" 
+           class="github-link">
+           📂 Переглянути на GitHub
+        </a>
     </div>
 
     <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
@@ -178,5 +197,6 @@
             }, 100);
         }
     </script>
+    <script src="./content.bundle.js"></script>
 </body>
 </html>
